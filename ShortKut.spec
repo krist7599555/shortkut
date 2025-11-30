@@ -5,7 +5,7 @@ a = Analysis(
     ['lib.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('icon-1024.png', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -29,11 +29,17 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
     icon=['icon-sqcl.png'],
+)
+app = BUNDLE(
+    exe,
+    name='ShortKut.app',
+    icon='./icon-sqcl.png',
+    bundle_identifier=None,
 )
