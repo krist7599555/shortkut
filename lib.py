@@ -21,7 +21,7 @@ class ShortKutGui:
         root.protocol("WM_DELETE_WINDOW", lambda: self.quit())
         root.geometry("300x300")
         root.title("ShortKut")
-        img_url = resource_path('./icon-1024.png')
+        img_url = resource_path('assets/icon-1024.png')
         original_image = Image.open(img_url)
         resized_image = original_image.resize((300, 300)) 
         tk_image = ImageTk.PhotoImage(resized_image)

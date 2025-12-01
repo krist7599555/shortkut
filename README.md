@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./icon-sqcl.png" width="150" alt="ShortKut Icon" />
+  <img src="assets/icon-sqcl.png" width="150" alt="ShortKut Icon" />
   <br />
   <br />
   <img src="https://img.shields.io/badge/Mac_M1-Compatible-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Mac M1 Compatible" />
@@ -63,7 +63,7 @@ ShortKut listens for specific key sequences (last 3 keys pressed). The primary t
     ```bash
     mise run build
     # Or manually:
-    # pyinstaller --windowed --onefile --name ShortKut --icon ./icon-sqcl.png --add-data 'icon-1024.png:.' ./lib.py
+    # pyinstaller --windowed --onefile --name ShortKut --icon assets/icon-sqcl.png --add-data 'assets/icon-1024.png:assets' ./lib.py
     ```
 
 ## 💻 Technology

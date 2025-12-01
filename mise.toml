@@ -2,6 +2,13 @@
 python = "latest"
 
 [tasks]
-build = "pyinstaller --noconfirm --windowed --onefile --name ShortKut --icon ./icon-sqcl.png --add-data 'icon-1024.png:.' ./lib.py"
-clean = "rm -rf ./dist ./build"
+clean = "rm -rf ./dist ./build ShortKut.spec ShortKut.dmg"
 install = "brew install python-tk && pip install -r requirements.txt"
+
+[tasks.build]
+depends = ["clean"]
+run = [
+  "pyinstaller --noconfirm --windowed --onefile --name ShortKut --icon assets/icon-sqcl.png --add-data 'assets/icon-1024.png:assets' ./lib.py",
+  "rm ShortKut.spec",
+  "hdiutil create -fs HFS+ -srcfolder ./dist -volname 'ShortKut' ./ShortKut.dmg",
+]
