@@ -1,13 +1,15 @@
-from pynput import keyboard
-import subprocess
-
-from tkinter import Tk, StringVar, Label, Button
-from PIL import Image, ImageTk
-
 import os
 import sys
+import subprocess
+import tkinter as tk
+from PIL import Image, ImageTk
+from pynput import keyboard
+
+# Tkinter อนุญาตให้มี Tk() แค่ตัวเดียวต่อโปรเซส
+TK_ROOT = tk.Tk()
 
 def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
     try:
         base_path = sys._MEIPASS
     except Exception:
@@ -15,94 +17,105 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-class ShortKutGui:
-    def __init__(self):
-        root = Tk()
-        root.protocol("WM_DELETE_WINDOW", lambda: self.quit())
-        root.geometry("300x300")
-        root.title("ShortKut")
-        img_url = resource_path('assets/icon-1024.png')
-        original_image = Image.open(img_url)
-        resized_image = original_image.resize((300, 300)) 
-        tk_image = ImageTk.PhotoImage(resized_image)
-        image_label = Label(root, image=tk_image)
-        # Crucial: Keep a reference to the image object
-        # This prevents the image from being garbage collected
-        image_label.image = tk_image 
-        image_label.pack()
-        self.root = root
+class AppPresentation:
+    def __init__(self, on_quit=None):
+        self.on_quit = on_quit
+        self.root = TK_ROOT
+        self.root.protocol("WM_DELETE_WINDOW", self.quit)
+        self.root.geometry("300x300")
+        self.root.title("ShortKut")
+        
+        self._setup_ui()
+
+    def _setup_ui(self):
+        img_path = resource_path('assets/icon-1024.png')
+        if os.path.exists(img_path):
+            original_image = Image.open(img_path)
+            resized_image = original_image.resize((300, 300))
+            tk_image = ImageTk.PhotoImage(resized_image)
+            
+            image_label = tk.Label(self.root, image=tk_image)
+            image_label.image = tk_image # Keep reference
+            image_label.pack()
+        else:
+            Label(self.root, text="Icon not found").pack()
 
     def quit(self):
+        if self.on_quit:
+            self.on_quit()
         self.root.quit()
-        self.root.destroy() 
+        self.root.destroy()
 
-    def mainloop(self):
+    def start(self):
         self.root.mainloop()
 
-ls = []
+class AppKeyboardListener:
+    def __init__(self):
+        self.key_history = []
+        self.max_history = 3
+        self.listener = None
 
-print("Hi")
-print(list(keyboard.Key))
-def on_press(key, injected):
-    print("OnPress")
-    global ls
-    ls.append(f"{key}")
-    while len(ls) > 3: ls.pop(0)
-    combo3 = ' > '.join(ls)
-    print(combo3)
-    def check(app_name, param):
-        if (combo3.endswith(param)):
-            print(f"OPEN APP {app_name}")
-            subprocess.run(["open", "-a", app_name], capture_output=True, text=True)
-            return True
+    def _open_app(self, app_name):
+        print(f"OPEN APP {app_name}")
+        subprocess.run(["open", "-a", app_name], capture_output=True, text=True)
 
-    try:
-        print('alphanumeric key {} pressed; it was {}'.format(key.char, 'faked' if injected else 'not faked'))
+    def _check_sequence(self, sequence):
+        combo = ' > '.join(self.key_history)
+        return combo.endswith(sequence)
 
-        x = False \
-            or check("Helium", "Key.f3 > 'b'") \
-            or check("Helium", "':' > ':' > 'b'") \
-            or check("Helium", "Key.shift_r > Key.shift_r > 'b'") \
-            or check("Helium", "Key.shift_r > Key.shift_r > 'B'") \
-            or check("Ghostty", "Key.f3 > 't'") \
-            or check("Ghostty", "':' > ':' > 't'") \
-            or check("Ghostty", "Key.shift_r > Key.shift_r > 't'") \
-            or check("Ghostty", "Key.shift_r > Key.shift_r > 'T'") \
-            or check("Antigravity", "Key.f3 > 'c'") \
-            or check("Antigravity", "':' > ':' > 'c'") \
-            or check("Antigravity", "Key.shift_r > Key.shift_r > 'c'") \
-            or check("Antigravity", "Key.shift_r > Key.shift_r > 'C'") \
-            or True
-        
-        
-    except AttributeError:
-        print('special key {} pressed'.format(key))
+    def on_press(self, key):
+        try:
+            key_str = f"{key}"
+            self.key_history.append(key_str)
+            
+            if len(self.key_history) > self.max_history:
+                self.key_history.pop(0)
+            
+            # Check for shortcuts
+            if self._check_sequence("Key.f3 > 'b'") or \
+               self._check_sequence("':' > ':' > 'b'") or \
+               self._check_sequence("Key.shift_r > Key.shift_r > 'b'") or \
+               self._check_sequence("Key.shift_r > Key.shift_r > 'B'"):
+                self._open_app("Helium")
+                
+            elif self._check_sequence("Key.f3 > 't'") or \
+                 self._check_sequence("':' > ':' > 't'") or \
+                 self._check_sequence("Key.shift_r > Key.shift_r > 't'") or \
+                 self._check_sequence("Key.shift_r > Key.shift_r > 'T'"):
+                self._open_app("Ghostty")
+                
+            elif self._check_sequence("Key.f3 > 'c'") or \
+                 self._check_sequence("':' > ':' > 'c'") or \
+                 self._check_sequence("Key.shift_r > Key.shift_r > 'c'") or \
+                 self._check_sequence("Key.shift_r > Key.shift_r > 'C'"):
+                self._open_app("Antigravity")
 
-def on_release(key, injected):
-    print('{} released; it was {}'.format(key, 'faked' if injected else 'not faked'))
-    # if key == keyboard.Key.esc:
-        # Stop listener
-        # return False
+        except Exception as e:
+            print(f"Error processing key: {e}")
 
+    def start(self):
+        self.listener = keyboard.Listener(on_press=self.on_press)
+        self.listener.start()
 
-def on_activate_h():
-    print('<ctrl>+<alt>+h pressed')
+    def stop(self):
+        if self.listener:
+            self.listener.stop()
 
-def on_activate_i():
-    print('<ctrl>+<alt>+i pressed')
+def main():
+    print("Starting ShortKut...")
+    
+    # Initialize Logic
+    listener = AppKeyboardListener()
+    listener.start()
+    
+    # Initialize GUI
+    # Pass listener stop callback to ensure clean exit
+    gui = AppPresentation(on_quit=listener.stop)
+    gui.start()
 
-with keyboard.GlobalHotKeys({
-        '<ctrl>+<alt>+h i': on_activate_h,
-        # '<ctrl>+<alt>+h': on_activate_h,
-        '<ctrl>+<alt>+i': on_activate_i}) as h:
-    h.join()
+    # Wait for listener thread to finish (optional, as GUI mainloop blocks)
+    listener.listener.join()
 
-listener = keyboard.Listener(
-    on_press=on_press,
-    on_release=on_release)
-listener.start()
-listener.wait()
-gui = ShortKutGui()
-gui.mainloop()
-listener.join()
+if __name__ == "__main__":
+    main()
 
