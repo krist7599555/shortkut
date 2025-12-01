@@ -2,13 +2,14 @@ import os
 import sys
 import subprocess
 import tkinter as tk
+from typing import Callable, Optional
 from PIL import Image, ImageTk
 from pynput import keyboard
 
 # Tkinter อนุญาตให้มี Tk() แค่ตัวเดียวต่อโปรเซส
 TK_ROOT = tk.Tk()
 
-def resource_path(relative_path):
+def resource_path(relative_path: str) -> str:
     """Get absolute path to resource, works for dev and for PyInstaller"""
     try:
         base_path = sys._MEIPASS
@@ -18,7 +19,7 @@ def resource_path(relative_path):
 
 
 class AppPresentation:
-    def __init__(self, on_quit=None):
+    def __init__(self, on_quit: Optional[Callable[[], None]] = None) -> None:
         self.on_quit = on_quit
         self.root = TK_ROOT
         self.root.protocol("WM_DELETE_WINDOW", self.quit)
@@ -27,7 +28,7 @@ class AppPresentation:
         
         self._setup_ui()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         path = resource_path('assets/icon-1024.png')
         if not os.path.exists(path):
             tk.Label(self.root, text="Icon not found").pack()
@@ -37,26 +38,26 @@ class AppPresentation:
         self.photo = ImageTk.PhotoImage(Image.open(path).resize((300, 300)))
         tk.Label(self.root, image=self.photo).pack()
 
-    def quit(self):
+    def quit(self) -> None:
         if self.on_quit:
             self.on_quit()
         self.root.quit()
         self.root.destroy()
 
-    def start(self):
+    def start(self) -> None:
         self.root.mainloop()
 
 class AppKeyboardListener:
-    def __init__(self):
-        self.history = []
-        self.limit = 3
-        self.listener = None
-        self.shortcuts = []
+    def __init__(self) -> None:
+        self.history: list[str] = []
+        self.limit: int = 3
+        self.listener: Optional[keyboard.Listener] = None
+        self.shortcuts: list[dict[str, list[str] | Callable[[], None]]] = []
 
-    def add_shortcut(self, triggers, action):
+    def add_shortcut(self, triggers: list[str], action: Callable[[], None]) -> None:
         self.shortcuts.append({'triggers': triggers, 'action': action})
 
-    def on_press(self, key):
+    def on_press(self, key: keyboard.Key | keyboard.KeyCode) -> None:
         try:
             self.history.append(f"{key}")
             if len(self.history) > self.limit:
@@ -73,20 +74,20 @@ class AppKeyboardListener:
         except Exception as e:
             print(f"Error processing key: {e}")
 
-    def start(self):
+    def start(self) -> None:
         self.listener = keyboard.Listener(on_press=self.on_press)
         self.listener.start()
 
-    def stop(self):
+    def stop(self) -> None:
         if self.listener:
             self.listener.stop()
 
-def main():
+def main() -> None:
     print("Starting ShortKut...")
     
     listener = AppKeyboardListener()
     
-    def launch(app):
+    def launch(app: str) -> None:
         print(f"Launching {app}")
         subprocess.run(f"open -a '{app}'", shell=True, capture_output=True, text=True)
 
@@ -116,4 +117,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
