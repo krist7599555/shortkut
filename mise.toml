@@ -2,6 +2,6 @@
 python = "latest"
 
 [tasks]
-build = "pyinstaller --windowed --onefile --name ShortKut --icon ./icon-sqcl.png --add-data 'icon-1024.png:.' ./lib.py"
+build = "pyinstaller --noconfirm --windowed --onefile --name ShortKut --icon ./icon-sqcl.png --add-data 'icon-1024.png:.' ./lib.py"
 clean = "rm -rf ./dist ./build"
 install = "brew install python-tk && pip install -r requirements.txt"

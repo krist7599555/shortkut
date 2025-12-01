@@ -15,6 +15,8 @@
 
 ShortKut is a macOS productivity tool designed to streamline your workflow by detecting custom key sequences to launch applications instantly.
 
+**ShortKut** คือเครื่องมือช่วยเพิ่มความโปรดักทีฟบน macOS ที่ออกแบบมาเพื่อช่วยให้ workflow ของคุณลื่นไหลยิ่งขึ้น โดยการตรวจจับการกดปุ่มตามลำดับเพื่อเปิดแอปพลิเคชันได้ทันที
+
 ## ✨ Features
 
 - ⚡ **Quick App Launching**: Trigger applications using simple key sequences.
