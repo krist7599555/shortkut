@@ -28,17 +28,14 @@ class AppPresentation:
         self._setup_ui()
 
     def _setup_ui(self):
-        img_path = resource_path('assets/icon-1024.png')
-        if os.path.exists(img_path):
-            original_image = Image.open(img_path)
-            resized_image = original_image.resize((300, 300))
-            tk_image = ImageTk.PhotoImage(resized_image)
-            
-            image_label = tk.Label(self.root, image=tk_image)
-            image_label.image = tk_image # Keep reference
-            image_label.pack()
-        else:
+        path = resource_path('assets/icon-1024.png')
+        if not os.path.exists(path):
             tk.Label(self.root, text="Icon not found").pack()
+            return
+
+        # Chain image processing and keep reference in self to prevent GC
+        self.photo = ImageTk.PhotoImage(Image.open(path).resize((300, 300)))
+        tk.Label(self.root, image=self.photo).pack()
 
     def quit(self):
         if self.on_quit:
@@ -51,40 +48,27 @@ class AppPresentation:
 
 class AppKeyboardListener:
     def __init__(self):
-        self.key_history = []
-        self.max_history = 3
+        self.history = []
+        self.limit = 3
         self.listener = None
         self.shortcuts = []
 
     def add_shortcut(self, triggers, action):
-        """
-        Register a shortcut.
-        :param triggers: List of sequence strings (e.g. ["Key.f3 > 'b'", ...])
-        :param action: Callback function to execute when triggered
-        """
-        self.shortcuts.append({
-            'triggers': triggers,
-            'action': action
-        })
-
-    def _check_sequence(self, sequence):
-        combo = ' > '.join(self.key_history)
-        return combo.endswith(sequence)
+        self.shortcuts.append({'triggers': triggers, 'action': action})
 
     def on_press(self, key):
         try:
-            key_str = f"{key}"
-            self.key_history.append(key_str)
+            self.history.append(f"{key}")
+            if len(self.history) > self.limit:
+                self.history.pop(0)
             
-            if len(self.key_history) > self.max_history:
-                self.key_history.pop(0)
+            combo = ' > '.join(self.history)
             
-            # Check registered shortcuts
-            for shortcut in self.shortcuts:
-                for trigger in shortcut['triggers']:
-                    if self._check_sequence(trigger):
-                        shortcut['action']()
-                        return
+            # Check if any trigger matches the end of the current combo
+            for s in self.shortcuts:
+                if any(combo.endswith(t) for t in s['triggers']):
+                    s['action']()
+                    return
 
         except Exception as e:
             print(f"Error processing key: {e}")
@@ -100,44 +84,34 @@ class AppKeyboardListener:
 def main():
     print("Starting ShortKut...")
     
-    # Initialize Logic
     listener = AppKeyboardListener()
     
-    def open_app(name):
-        print(f"OPEN APP {name}")
-        # Using shell=True for 'open' command
-        subprocess.run(f"open -a '{name}'", shell=True, capture_output=True, text=True)
+    def launch(app):
+        print(f"Launching {app}")
+        subprocess.run(f"open -a '{app}'", shell=True, capture_output=True, text=True)
 
-    # Configure Shortcuts
+    # Register shortcuts
     listener.add_shortcut([
-        "Key.f3 > 'b'",
-        "':' > ':' > 'b'",
-        "Key.shift_r > Key.shift_r > 'b'",
-        "Key.shift_r > Key.shift_r > 'B'"
-    ], lambda: open_app("Helium"))
+        "Key.f3 > 'b'", "':' > ':' > 'b'",
+        "Key.shift_r > Key.shift_r > 'b'", "Key.shift_r > Key.shift_r > 'B'"
+    ], lambda: launch("Helium"))
     
     listener.add_shortcut([
-        "Key.f3 > 't'",
-        "':' > ':' > 't'",
-        "Key.shift_r > Key.shift_r > 't'",
-        "Key.shift_r > Key.shift_r > 'T'"
-    ], lambda: open_app("Ghostty"))
+        "Key.f3 > 't'", "':' > ':' > 't'",
+        "Key.shift_r > Key.shift_r > 't'", "Key.shift_r > Key.shift_r > 'T'"
+    ], lambda: launch("Ghostty"))
     
     listener.add_shortcut([
-        "Key.f3 > 'c'",
-        "':' > ':' > 'c'",
-        "Key.shift_r > Key.shift_r > 'c'",
-        "Key.shift_r > Key.shift_r > 'C'"
-    ], lambda: open_app("Antigravity"))
+        "Key.f3 > 'c'", "':' > ':' > 'c'",
+        "Key.shift_r > Key.shift_r > 'c'", "Key.shift_r > Key.shift_r > 'C'"
+    ], lambda: launch("Antigravity"))
 
     listener.start()
     
-    # Initialize GUI
-    # Pass listener stop callback to ensure clean exit
-    gui = AppPresentation(on_quit=listener.stop)
-    gui.start()
+    # Start GUI (blocks until quit)
+    AppPresentation(on_quit=listener.stop).start()
 
-    # Wait for listener thread to finish (optional, as GUI mainloop blocks)
+    # Ensure listener thread finishes
     listener.listener.join()
 
 if __name__ == "__main__":
