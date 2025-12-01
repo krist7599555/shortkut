@@ -2,7 +2,7 @@
 python = "latest"
 
 [tasks]
-clean = "rm -rf ./dist ./build ShortKut.spec ShortKut.dmg"
+clean = "rm -rf ./dist ./build ShortKut.spec"
 install = "brew install python-tk && pip install -r requirements.txt"
 
 [tasks.build]
@@ -12,3 +12,7 @@ run = [
   "rm ShortKut.spec",
   "hdiutil create -fs HFS+ -srcfolder ./dist -volname 'ShortKut' ./ShortKut.dmg",
 ]
+
+[tasks.increase_version]
+depends = ["clean"]
+run = ["./scripts/bump_version.sh"]
