@@ -1,0 +1,24 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    device_input (1.0.1.1)
+      slop (~> 4.0)
+    myhidapi (1.0.2)
+    slop (4.10.1)
+
+PLATFORMS
+  arm64-darwin
+  arm64-darwin-25
+  ruby
+
+DEPENDENCIES
+  device_input (~> 1.0)
+  myhidapi (~> 1.0)
+
+CHECKSUMS
+  device_input (1.0.1.1) sha256=bb01b8c8d6354a1241e47b742865f9c197c96f8ba626f4bedd69ea7bec5cd778
+  myhidapi (1.0.2) sha256=408aedd0a28eeb3919ca41262450d31ef491f5c3d4680feb813309b98d21ad3d
+  slop (4.10.1) sha256=844322b5ffcf17ed4815fdb173b04a20dd82b4fd93e3744c88c8fafea696d9c7
+
+BUNDLED WITH
+  4.0.0.beta2

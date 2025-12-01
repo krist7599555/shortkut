@@ -1,0 +1,2 @@
+---
+BUNDLE_BUILD__MYHIDAPI: "--with-hidapi-dir=/opt/homebrew/Cellar/hidapi/0.15.0"
