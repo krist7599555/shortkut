@@ -15,4 +15,4 @@ run = [
 
 [tasks.increase_version]
 depends = ["clean"]
-run = ["./scripts/bump_version.sh"]
+run = ["./scripts/bump_version.rb"]
