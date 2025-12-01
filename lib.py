@@ -38,7 +38,7 @@ class AppPresentation:
             image_label.image = tk_image # Keep reference
             image_label.pack()
         else:
-            Label(self.root, text="Icon not found").pack()
+            tk.Label(self.root, text="Icon not found").pack()
 
     def quit(self):
         if self.on_quit:
@@ -54,10 +54,18 @@ class AppKeyboardListener:
         self.key_history = []
         self.max_history = 3
         self.listener = None
+        self.shortcuts = []
 
-    def _open_app(self, app_name):
-        print(f"OPEN APP {app_name}")
-        subprocess.run(["open", "-a", app_name], capture_output=True, text=True)
+    def add_shortcut(self, triggers, action):
+        """
+        Register a shortcut.
+        :param triggers: List of sequence strings (e.g. ["Key.f3 > 'b'", ...])
+        :param action: Callback function to execute when triggered
+        """
+        self.shortcuts.append({
+            'triggers': triggers,
+            'action': action
+        })
 
     def _check_sequence(self, sequence):
         combo = ' > '.join(self.key_history)
@@ -71,24 +79,12 @@ class AppKeyboardListener:
             if len(self.key_history) > self.max_history:
                 self.key_history.pop(0)
             
-            # Check for shortcuts
-            if self._check_sequence("Key.f3 > 'b'") or \
-               self._check_sequence("':' > ':' > 'b'") or \
-               self._check_sequence("Key.shift_r > Key.shift_r > 'b'") or \
-               self._check_sequence("Key.shift_r > Key.shift_r > 'B'"):
-                self._open_app("Helium")
-                
-            elif self._check_sequence("Key.f3 > 't'") or \
-                 self._check_sequence("':' > ':' > 't'") or \
-                 self._check_sequence("Key.shift_r > Key.shift_r > 't'") or \
-                 self._check_sequence("Key.shift_r > Key.shift_r > 'T'"):
-                self._open_app("Ghostty")
-                
-            elif self._check_sequence("Key.f3 > 'c'") or \
-                 self._check_sequence("':' > ':' > 'c'") or \
-                 self._check_sequence("Key.shift_r > Key.shift_r > 'c'") or \
-                 self._check_sequence("Key.shift_r > Key.shift_r > 'C'"):
-                self._open_app("Antigravity")
+            # Check registered shortcuts
+            for shortcut in self.shortcuts:
+                for trigger in shortcut['triggers']:
+                    if self._check_sequence(trigger):
+                        shortcut['action']()
+                        return
 
         except Exception as e:
             print(f"Error processing key: {e}")
@@ -106,6 +102,34 @@ def main():
     
     # Initialize Logic
     listener = AppKeyboardListener()
+    
+    def open_app(name):
+        print(f"OPEN APP {name}")
+        # Using shell=True for 'open' command
+        subprocess.run(f"open -a '{name}'", shell=True, capture_output=True, text=True)
+
+    # Configure Shortcuts
+    listener.add_shortcut([
+        "Key.f3 > 'b'",
+        "':' > ':' > 'b'",
+        "Key.shift_r > Key.shift_r > 'b'",
+        "Key.shift_r > Key.shift_r > 'B'"
+    ], lambda: open_app("Helium"))
+    
+    listener.add_shortcut([
+        "Key.f3 > 't'",
+        "':' > ':' > 't'",
+        "Key.shift_r > Key.shift_r > 't'",
+        "Key.shift_r > Key.shift_r > 'T'"
+    ], lambda: open_app("Ghostty"))
+    
+    listener.add_shortcut([
+        "Key.f3 > 'c'",
+        "':' > ':' > 'c'",
+        "Key.shift_r > Key.shift_r > 'c'",
+        "Key.shift_r > Key.shift_r > 'C'"
+    ], lambda: open_app("Antigravity"))
+
     listener.start()
     
     # Initialize GUI
